@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משחק פירוק מספרים</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        #game-container {
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            width: 350px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        #tree-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .tree-box {
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 10px;
+            color: white;
+        }
+        .top-box { background-color: pink; }
+        .bottom-box { background-color: lightblue; margin: 5px; }
+        .input-box {
+            font-size: 24px;
+            width: 50px;
+            text-align: center;
+            border: none;
+        }
+        #check-btn {
+            font-size: 18px;
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: pink;
+            border: none;
+            cursor: pointer;
+        }
+        #progress {
+            margin-top: 10px;
+            font-size: 18px;
+            color: black;
+        }
+        .tree-structure {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .branch {
+            width: 80px;
+            height: 10px;
+            background-color: gray;
+        }
+        .bottom-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="tree-container" class="tree-structure">
+            <div class="tree-box top-box" id="sum-box"></div>
+            <div class="branch"></div>
+            <div class="bottom-container">
+                <div class="tree-box bottom-box" id="given-part"></div>
+                <div class="tree-box bottom-box"> 
+                    <input type="number" id="answer" class="input-box">
+                </div>
+            </div>
+        </div>
+        <button id="check-btn" onclick="checkAnswer()">בדיקה</button>
+        <div id="progress"></div>
+        <div id="result"></div>
+        <button onclick="startNewGame()">משחק חדש</button>
+    </div>
+
+    <script>
+        let problems = [];
+        let currentProblem;
+        let startTime, endTime;
+        let totalProblems;
+        let solvedProblems = 0;
+        let bestTime = localStorage.getItem("bestTime") || null;
+
+        function generateProblems() {
+            problems = [];
+            for (let sum = 6; sum <= 10; sum++) {
+                for (let i = 1; i <= sum / 2; i++) {
+                    let j = sum - i;
+                    problems.push([sum, i, j]);
+                }
+            }
+            problems = problems.sort(() => Math.random() - 0.5);
+            totalProblems = problems.length;
+        }
+
+        function updateProgress() {
+            document.getElementById("progress").innerText = `תרגיל ${solvedProblems} מתוך ${totalProblems}`;
+        }
+
+        function nextProblem() {
+            if (problems.length === 0) {
+                endTime = new Date();
+                let elapsedTime = ((endTime - startTime) / 1000) / totalProblems;
+                let message = `זמן ממוצע: ${elapsedTime.toFixed(2)} שניות לתרגיל`;
+                if (!bestTime || elapsedTime < bestTime) {
+                    bestTime = elapsedTime;
+                    localStorage.setItem("bestTime", bestTime);
+                    message += " 🏆 שיא חדש!";
+                }
+                document.getElementById("result").innerText = message;
+                return;
+            }
+            solvedProblems++;
+            updateProgress();
+            currentProblem = problems.pop();
+            document.getElementById("sum-box").innerText = currentProblem[0];
+            document.getElementById("given-part").innerText = currentProblem[1];
+            document.getElementById("answer").value = "";
+            document.getElementById("answer").focus();
+            document.getElementById("result").innerText = "";
+        }
+
+        function checkAnswer() {
+            let userAnswer = parseInt(document.getElementById("answer").value, 10);
+            if (userAnswer === currentProblem[2]) {
+                nextProblem();
+            } else {
+                document.getElementById("result").innerText = "❌ תשובה שגויה, נסה שוב";
+            }
+        }
+
+        function startNewGame() {
+            generateProblems();
+            solvedProblems = 0;
+            updateProgress();
+            startTime = new Date();
+            nextProblem();
+        }
+
+        window.onload = startNewGame;
+    </script>
+</body>
+</html>
